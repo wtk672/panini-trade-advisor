@@ -1,0 +1,263 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Panini Trade Advisor</title>
+  <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <style>
+    :root { --bg:#f7f5ef; --card:#fff; --ink:#18212f; --muted:#647084; --line:#e6e1d7; --green:#0b7a46; --yellow:#a66a00; --red:#b42318; --blue:#234b9b; }
+    * { box-sizing:border-box; }
+    body { margin:0; font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text",Inter,Segoe UI,sans-serif; background:var(--bg); color:var(--ink); }
+    .app { max-width:1120px; margin:0 auto; padding:24px; }
+    .hero { display:flex; justify-content:space-between; gap:16px; align-items:flex-start; margin-bottom:18px; }
+    h1 { margin:0 0 6px; font-size:30px; letter-spacing:-0.02em; }
+    .sub { color:var(--muted); font-size:15px; line-height:1.45; max-width:780px; }
+    .pill { background:#fff; border:1px solid var(--line); border-radius:999px; padding:8px 12px; font-size:13px; white-space:nowrap; }
+    .tabs { display:flex; gap:8px; margin:18px 0; flex-wrap:wrap; }
+    button, select, input, textarea { font:inherit; }
+    button { border:1px solid var(--line); background:#fff; border-radius:12px; padding:10px 12px; cursor:pointer; }
+    button.primary { background:var(--ink); color:white; border-color:var(--ink); }
+    button.active { background:#e9eefc; border-color:#b8c7f5; color:#183b8f; font-weight:700; }
+    .grid { display:grid; grid-template-columns: 1fr 1fr; gap:16px; }
+    @media (max-width: 860px) { .grid { grid-template-columns:1fr; } .hero { flex-direction:column; } }
+    .panel { background:var(--card); border:1px solid var(--line); border-radius:20px; padding:16px; box-shadow:0 1px 4px rgba(0,0,0,.03); }
+    .panel h2 { margin:0 0 10px; font-size:18px; }
+    .controls { display:grid; grid-template-columns:1fr 120px; gap:10px; margin-bottom:12px; }
+    .search { width:100%; border:1px solid var(--line); border-radius:12px; padding:10px 12px; background:#fff; }
+    .list { max-height:380px; overflow:auto; display:flex; flex-direction:column; gap:8px; padding-right:4px; }
+    .row { border:1px solid var(--line); border-radius:14px; padding:10px; display:flex; justify-content:space-between; gap:10px; align-items:center; background:#fff; }
+    .row.selected { border-color:#829ce6; background:#f1f4ff; }
+    .label { font-weight:650; }
+    .meta { color:var(--muted); font-size:12px; margin-top:2px; }
+    .qty { min-width:44px; text-align:center; border-radius:999px; background:#f2f0ea; padding:5px 8px; font-size:13px; }
+    .result { display:flex; flex-direction:column; gap:12px; }
+    .tradeCard { border:1px solid var(--line); border-radius:18px; padding:14px; background:#fff; }
+    .tradeCard.best { border-color:#9ed5b6; background:#f4fbf7; }
+    .badge { display:inline-flex; padding:5px 8px; border-radius:999px; font-size:12px; font-weight:700; margin-bottom:8px; }
+    .fair { background:#dff5e8; color:var(--green); }
+    .generous { background:#fff2cc; color:var(--yellow); }
+    .bad { background:#fee4e2; color:var(--red); }
+    .cards { display:flex; flex-wrap:wrap; gap:8px; margin:8px 0; }
+    .chip { border:1px solid var(--line); border-radius:999px; padding:8px 10px; background:#fff; }
+    .score { color:var(--muted); font-size:13px; }
+    .editor textarea { width:100%; min-height:360px; border:1px solid var(--line); border-radius:16px; padding:12px; font-family:ui-monospace,SFMono-Regular,Menlo,monospace; font-size:12px; }
+    .note { background:#fff8df; border:1px solid #ead894; border-radius:16px; padding:12px; color:#5d4600; font-size:13px; line-height:1.4; margin-bottom:14px; }
+    .small { font-size:12px; color:var(--muted); }
+  </style>
+</head>
+<body>
+<div id="root"></div>
+
+<script type="text/babel">
+const FLAGS = {
+  Mexico:"🇲🇽", "South Africa":"🇿🇦", Korea:"🇰🇷", Czechia:"🇨🇿", Canada:"🇨🇦", "Bosnia & Herzegovina":"🇧🇦",
+  Qatar:"🇶🇦", Switzerland:"🇨🇭", Brazil:"🇧🇷", Morocco:"🇲🇦", Haiti:"🇭🇹", Scotland:"🏴", USA:"🇺🇸",
+  Paraguay:"🇵🇾", Australia:"🇦🇺", Türkiye:"🇹🇷", Germany:"🇩🇪", Curaçao:"🇨🇼", "Côte d’Ivoire":"🇨🇮",
+  Ecuador:"🇪🇨", Netherlands:"🇳🇱", Japan:"🇯🇵", Sweden:"🇸🇪", Tunisia:"🇹🇳", Belgium:"🇧🇪", Egypt:"🇪🇬",
+  Iran:"🇮🇷", "New Zealand":"🇳🇿", Spain:"🇪🇸", "Cabo Verde":"🇨🇻", "Saudi Arabia":"🇸🇦", Uruguay:"🇺🇾",
+  France:"🇫🇷", Senegal:"🇸🇳", Iraq:"🇮🇶", Norway:"🇳🇴", Argentina:"🇦🇷", Algeria:"🇩🇿", Austria:"🇦🇹",
+  Jordan:"🇯🇴", Portugal:"🇵🇹", "Congo DR":"🇨🇩", Uzbekistan:"🇺🇿", Colombia:"🇨🇴", England:"🏴",
+  Croatia:"🇭🇷", Ghana:"🇬🇭", Panama:"🇵🇦"
+};
+
+const missingSeed = [
+  ["Mexico",[3,11,12,16,20]], ["Korea",[5,7,9,11,13,17,18]], ["Czechia",[6,11,12,17,20]],
+  ["Canada",[1,2,5,11,13,15,18,20]], ["Bosnia & Herzegovina",[8,13,16,17]], ["Qatar",[5,9,11,14,17]], ["Switzerland",[5,7,11,12,13,14,15]],
+  ["Brazil",[8,12]], ["Morocco",[7,10,17,20]], ["Haiti",[3,7,9,10,12]], ["Scotland",[5,10,11,18,20]],
+  ["USA",[2,4,11,14,16]], ["Paraguay",[4,6,7,19,20]], ["Australia",[4,5,7,12,14]], ["Türkiye",[1,5,6,7,8,9,13,16,17]],
+  ["Germany",[1,2,4,13,14,17,18,20]], ["Curaçao",[4,5,7,13,15,17,20]], ["Côte d’Ivoire",[1,2,10,16]], ["Ecuador",[13,15,16,17,19]],
+  ["Netherlands",[3,5,6,6,10,11,18,19,20]], ["Japan",[3,7,13,16]], ["Sweden",[5,6,11,12,15,16,17,19]], ["Tunisia",[2,3,6,7,10,11,13,18,20]],
+  ["Belgium",[3,8]], ["Egypt",[3,4,5,12,14,17,18]], ["Iran",[7,9,10,16,18]], ["New Zealand",[4,5,6,7,9,13,14,15,16]],
+  ["Spain",[15]], ["Cabo Verde",[2,3,10]], ["Saudi Arabia",[1,4,5,7,13,18]], ["Uruguay",[1,18]],
+  ["Senegal",[7]], ["Iraq",[3,4,5,6,9,13,17]], ["Norway",[4,6,9]],
+  ["Argentina",[3,4,9,13]], ["Algeria",[6,8,10,11,16,18,19]], ["Austria",[3,6,7,11,14,15,20]], ["Jordan",[1,12,13,16]],
+  ["Portugal",[4]], ["Congo DR",[5,6,11,19]], ["Uzbekistan",[4,7,8,20]], ["Colombia",[7,9,16,17,18,20]],
+  ["England",[6,8,12,14]], ["Croatia",[3,4,11,14]], ["Ghana",[3,6,7,8,12,14]], ["Panama",[3,5,6,8,9]]
+].flatMap(([country, nums]) => nums.map(n => ({ id:`missing-${country}-${n}`, country, name:`#${n}`, type:"normal", qty:1, value:1 })));
+
+const duplicateSeed = [
+  // Starter inventory from the photos. Please verify quantities in the Inventory tab.
+  ["Switzerland","Breel Embolo","normal",1],["Switzerland","Zeki Amdouni","normal",1],["Switzerland","Granit Xhaka","normal",3],["Switzerland","Yvon Mvogo","normal",1],["Switzerland","Ruben Vargas","normal",1],["Switzerland","Fabian Rieder","normal",1],
+  ["Uruguay","José María Giménez","normal",2],["Uruguay","Darwin Núñez","normal",1],["Uruguay","Nicolás de la Cruz","normal",1],["Uruguay","Giorgian de Arrascaeta","normal",1],
+  ["Senegal","Édouard Mendy","normal",3],["Senegal","Yehvann Diouf","normal",1],["Senegal","Kalidou Koulibaly","normal",2],["Senegal","Abdoulaye Seck","normal",1],
+  ["Morocco","Adam Masina","normal",1],["Morocco","Ayoub El Kaabi","normal",1],["Morocco","Noussair Mazraoui","normal",1],
+  ["Türkiye","Zeki Çelik","normal",1],["Türkiye","Kerem Aktürkoğlu","normal",1],["Türkiye","Mert Müldür","normal",1],["Türkiye","Uğurcan Çakır","normal",1],
+  ["Bosnia & Herzegovina","Amar Dedić","normal",1],["Bosnia & Herzegovina","Nikola Katić","normal",1],["Bosnia & Herzegovina","Benjamin Tahirović","normal",1],
+  ["Japan","Takefusa Kubo","normal",1],["Japan","Hidemasa Morita","normal",1],["Japan","Koki Ogawa","normal",1],
+  ["England","Phil Foden","normal",1],["England","Marcus Rashford","normal",1],["England","Ezri Konsa","normal",1],["England","Jude Bellingham","normal",1],["England","Reece James","normal",1],["England","Jordan Pickford","normal",1],
+  ["France","Désiré Doué","normal",1],["France","Michael Olise","blue-border",1],["France","Lucas Digne","normal",1],["France","Christopher Nkunku","normal",1],["France","Team Photo","team",1],["France","Crest Foil","foil-crest",1],
+  ["Croatia","Ivan Perišić","normal",1],["Croatia","Ante Budimir","normal",1],["Croatia","Petar Sučić","normal",1],["Croatia","Crest Foil","foil-crest",1],
+  ["Ghana","Daniel Amartey","normal",1],["Ghana","Jordan Ayew","normal",1],["Ghana","Iñaki Williams","normal",1],
+  ["Panama","José Fajardo","blue-border",1],["Panama","Alberto Carrasquilla","normal",1],["Panama","Team Photo","team",1],
+  ["Côte d’Ivoire","Seko Fofana","normal",1],["Côte d’Ivoire","Odilon Kossounou","normal",1],["Côte d’Ivoire","Christ Koffi","normal",1],
+  ["Iraq","Aymen Hussein","blue-border",1],["Iraq","Manaf Younis","normal",1],["Iraq","Amir Sher","normal",1],["Iraq","Crest Foil","foil-crest",1],
+  ["Haiti","Danley Jean Jacques","normal",1],["Haiti","Nader Nahir","normal",1],["Haiti","Christopher Attys","normal",1],["Haiti","Team Photo","team",1],
+  ["Mexico","Team Photo","team",1],["Mexico","Crest Foil","foil-crest",1],["Mexico","José Sánchez","normal",1],
+  ["Brazil","Estêvão","blue-border",1],["Brazil","Team 1994","historic",1],["Brazil","Team Photo","team",1],
+  ["Belgium","Jérémy Doku","normal",1],["Belgium","Romelu Lukaku","normal",1],["Belgium","Youri Tielemans","normal",1],["Belgium","Team Photo","team",1],
+  ["USA","Haji Wright","normal",1],["USA","Cameron Carter-Vickers","normal",1],["USA","Team Photo","team",1],
+  ["Argentina","Cristian Romero","normal",1],["Argentina","Lionel Messi","normal",1],
+  ["Canada","Jonathan David","normal",1],["Canada","Team Photo","team",1],
+  ["Sweden","Viktor Gyökeres","normal",1],["Sweden","Alexander Isak","normal",1],["Sweden","Crest Foil","foil-crest",1],
+  ["FIFA","World Cup Trophy Blue","special",1],["FIFA","World Cup Trophy Red","special",1],["FIFA","World Cup Trophy Green","special",1],["FIFA","Mascot / Logo Special","special",1]
+].map(([country,name,type,qty], i) => ({ id:`dup-${i}`, country, name, type, qty, value: valueFor(type) }));
+
+function valueFor(type) {
+  return ({ normal:1, "blue-border":1.5, team:2, historic:3, "foil-crest":4, special:5 }[type] || 1);
+}
+function labelFor(s) { return `${FLAGS[s.country] || ""} ${s.country} — ${s.name}`; }
+function score(items) { return items.reduce((sum, s) => sum + (s.value || valueFor(s.type)), 0); }
+function expandedInventory(items) {
+  const out = [];
+  items.forEach(s => { for (let i=0;i<(s.qty||1);i++) out.push({...s, copy:i}); });
+  return out;
+}
+function combos(items, maxLen=3) {
+  const exp = expandedInventory(items);
+  const res = [];
+  for (let i=0;i<exp.length;i++) res.push([exp[i]]);
+  for (let i=0;i<exp.length;i++) for (let j=i+1;j<exp.length;j++) res.push([exp[i],exp[j]]);
+  if (maxLen >= 3) {
+    for (let i=0;i<exp.length;i++) for (let j=i+1;j<exp.length;j++) for (let k=j+1;k<exp.length;k++) res.push([exp[i],exp[j],exp[k]]);
+  }
+  return res;
+}
+function recommend(targets, inventory) {
+  const targetScore = score(targets);
+  if (!targetScore) return [];
+  return combos(inventory, targetScore > 4 ? 3 : 2)
+    .map(c => {
+      const offer = score(c);
+      const diff = Math.abs(offer - targetScore);
+      const generosity = offer - targetScore;
+      const lowQtyPenalty = c.some(x => (inventory.find(i=>i.id===x.id)?.qty || 1) <= 1) ? .2 : 0;
+      const simplePenalty = (c.length - 1) * .15;
+      return { cards:c, offer, target:targetScore, diff, generosity, rank: diff + lowQtyPenalty + simplePenalty };
+    })
+    .sort((a,b) => a.rank - b.rank)
+    .slice(0,5);
+}
+function fairness(r) {
+  const pct = Math.abs(r.offer-r.target)/Math.max(r.target,1);
+  if (pct <= .15) return ["Fair", "fair"];
+  if (r.offer > r.target) return ["Generous", "generous"];
+  return ["Too low", "bad"];
+}
+
+function Selector({title, items, selected, setSelected}) {
+  const [q,setQ] = React.useState("");
+  const [type,setType] = React.useState("all");
+  const filtered = items.filter(s => {
+    const hay = `${s.country} ${s.name} ${s.type}`.toLowerCase();
+    return hay.includes(q.toLowerCase()) && (type==="all" || s.type===type);
+  });
+  function toggle(s) {
+    setSelected(prev => prev.some(x=>x.id===s.id)
+      ? prev.filter(x=>x.id!==s.id)
+      : [...prev, s]);
+  }
+  return <div className="panel">
+    <h2>{title}</h2>
+    <div className="controls">
+      <input className="search" value={q} onChange={e=>setQ(e.target.value)} placeholder="Search country, player, sticker…" />
+      <select className="search" value={type} onChange={e=>setType(e.target.value)}>
+        <option value="all">All types</option><option value="normal">Normal</option><option value="blue-border">Blue</option><option value="team">Team</option><option value="foil-crest">Foil crest</option><option value="special">Special</option>
+      </select>
+    </div>
+    <div className="list">
+      {filtered.map(s => {
+        const is = selected.some(x=>x.id===s.id);
+        return <div key={s.id} onClick={()=>toggle(s)} className={"row "+(is?"selected":"")}>
+          <div><div className="label">{labelFor(s)}</div><div className="meta">{s.type} · value {s.value || valueFor(s.type)}</div></div>
+          {"qty" in s && <div className="qty">×{s.qty}</div>}
+        </div>
+      })}
+    </div>
+  </div>
+}
+
+function Results({targets, inventory, inverse=false}) {
+  const recs = recommend(targets, inventory);
+  return <div className="panel result">
+    <h2>{inverse ? "Ask for this in return" : "Suggested fair offer"}</h2>
+    {!targets.length && <div className="note">Select one or more stickers first.</div>}
+    {!!targets.length && <div className="small">Target value: {score(targets)} pts · recommendations prefer close value and simpler trades.</div>}
+    {recs.map((r,i) => {
+      const [txt, cls] = fairness(r);
+      return <div key={i} className={"tradeCard "+(i===0?"best":"")}>
+        <span className={"badge "+cls}>{i===0 ? "Best: " : "Backup: "}{txt}</span>
+        <div className="cards">{r.cards.map((c,idx)=><span className="chip" key={idx}>{labelFor(c)}</span>)}</div>
+        <div className="score">Offer value {r.offer} pts vs target {r.target} pts</div>
+      </div>
+    })}
+  </div>
+}
+
+function App() {
+  const [tab,setTab] = React.useState("want");
+  const [dups,setDups] = React.useState(()=> JSON.parse(localStorage.getItem("panini-dups") || "null") || duplicateSeed);
+  const [missing,setMissing] = React.useState(()=> JSON.parse(localStorage.getItem("panini-missing") || "null") || missingSeed);
+  const [want,setWant] = React.useState([]);
+  const [asked,setAsked] = React.useState([]);
+  const [json,setJson] = React.useState("");
+
+  React.useEffect(()=>localStorage.setItem("panini-dups", JSON.stringify(dups)),[dups]);
+  React.useEffect(()=>localStorage.setItem("panini-missing", JSON.stringify(missing)),[missing]);
+
+  const editPayload = { duplicates: dups, missing };
+  function loadEditor(){ setJson(JSON.stringify(editPayload,null,2)); }
+  function saveEditor(){
+    try {
+      const parsed = JSON.parse(json);
+      setDups(parsed.duplicates.map(s=>({...s, value:s.value || valueFor(s.type)})));
+      setMissing(parsed.missing.map(s=>({...s, value:s.value || valueFor(s.type)})));
+      alert("Inventory saved.");
+    } catch(e) { alert("That JSON has an error."); }
+  }
+
+  return <div className="app">
+    <div className="hero">
+      <div>
+        <h1>⚽ Panini Trade Advisor</h1>
+        <div className="sub">Simple kid-friendly trading: pick what he wants, get the fairest stickers to offer. Or pick what another kid wants from his duplicates, and see what he should ask for in return.</div>
+      </div>
+      <div className="pill">{dups.length} duplicate entries · {dups.reduce((a,b)=>a+(b.qty||1),0)} total stickers</div>
+    </div>
+
+    <div className="note"><b>Important:</b> I seeded this from the photo pass, but the inventory should be sanity-checked in the Inventory tab before real trades. The app is built so corrections take 10 seconds and persist in the browser.</div>
+
+    <div className="tabs">
+      <button className={tab==="want"?"active":""} onClick={()=>setTab("want")}>I want…</button>
+      <button className={tab==="asked"?"active":""} onClick={()=>setTab("asked")}>Someone wants…</button>
+      <button className={tab==="inventory"?"active":""} onClick={()=>{setTab("inventory"); loadEditor();}}>Inventory</button>
+    </div>
+
+    {tab==="want" && <div className="grid">
+      <Selector title="Select sticker(s) he wants" items={missing} selected={want} setSelected={setWant}/>
+      <Results targets={want} inventory={dups}/>
+    </div>}
+
+    {tab==="asked" && <div className="grid">
+      <Selector title="Select sticker(s) someone wants from him" items={dups} selected={asked} setSelected={setAsked}/>
+      <Results targets={asked} inventory={missing} inverse/>
+    </div>}
+
+    {tab==="inventory" && <div className="panel editor">
+      <h2>Inventory JSON</h2>
+      <p className="small">Edit quantities, names, or types here. Values are: normal, blue-border, team, historic, foil-crest, special.</p>
+      <textarea value={json} onChange={e=>setJson(e.target.value)} />
+      <div style={{display:"flex",gap:8,marginTop:10}}>
+        <button className="primary" onClick={saveEditor}>Save inventory</button>
+        <button onClick={()=>{localStorage.removeItem("panini-dups"); localStorage.removeItem("panini-missing"); location.reload();}}>Reset</button>
+      </div>
+    </div>}
+  </div>
+}
+
+ReactDOM.createRoot(document.getElementById("root")).render(<App/>);
+</script>
+</body>
+</html>
